@@ -11,21 +11,32 @@ class SVM4342 ():
     # y should correspondingly be an n-vector of labels (-1 or +1).
     def fit (self, X, y):
         # TODO change these -- they should be matrices or vectors
-        G = 0
-        P = 0
-        q = 0
-        h = 0
+        Xbiased = append_ones(X)
+        yprime = np.tile(y * -1, (Xbiased.shape[1], 1)).T
+        itilde = np.eye(Xbiased.shape[1])
+        itilde[-1,-1] = 0
+        G = yprime * Xbiased
+        P = itilde
+        q = np.zeros(Xbiased.shape[1])
+        h = np.repeat(-1, y.shape[0])
 
         # Solve -- if the variables above are defined correctly, you can call this as-is:
         sol = solvers.qp(matrix(P, tc='d'), matrix(q, tc='d'), matrix(G, tc='d'), matrix(h, tc='d'))
 
         # Fetch the learned hyperplane and bias parameters out of sol['x']
-        self.w = 0  # TODO change this
-        self.b = 0  # TODO change this
+        self.w = np.array(sol['x'].H[:-1])
+        self.b = sol['x'].H[-1]
 
     # Given a 2-D matrix of examples X, output a vector of predicted class labels
     def predict (self, x):
-        return 0  # TODO fix
+        yhat = np.zeros(x.shape[0])
+        bools = (x.dot(self.w) >= 0 - self.b)[:,0]
+        yhat[bools] = 1
+        yhat[yhat == 0] = -1
+        return yhat
+
+def append_ones(array):
+    return np.hstack((array, np.ones((array.shape[0], 1))))
 
 def test1 ():
     # Set up toy problem
