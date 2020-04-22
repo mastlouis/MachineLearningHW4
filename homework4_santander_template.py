@@ -41,6 +41,7 @@ classifier.fit(xTrain, yTrain)
 
 # yhat1
 yhat1 = classifier.decision_function(xTest) # Linear kernel
+# yhat1 = classifier.predict(xTest) # Linear kernel
 
 # Compute AUC
 auc1 = roc_auc_score(yTest, yhat1)
@@ -52,7 +53,7 @@ print('Linear Kernel SVM Accuracy:', auc1)
 # Bootstrap Aggregation (Bagging)
 
 #The amount we want in each subset
-subSetNum = 10000
+subSetNum = 5000
 
 #Our predictions
 yhat2 = []
@@ -67,15 +68,18 @@ for i in range(0, xTrain.shape[0], subSetNum):
     testLabels = yTest[i: (i + subSetNum), ]
 
     # Apply the SVMs to the test set
-    classifier = SVC(kernel = 'poly', degree = 3, gamma = 'auto') # Non-linear kernel
+    classifier = SVC(kernel='poly', degree=3, gamma='auto') # Non-linear kernel
     classifier.fit(train, trainLabels)
-    yhat2.append(classifier.decision_function(xTest))
+    # yhat2.append(classifier.decision_function(xTest))
+    yhat2.append(classifier.predict(xTest))
 
 # yhat1 Calculations
 yhat2 = np.asarray(yhat2)
-yhat2 = np.sum(yhat2, axis = 0)
-yhat2 /= 10
+yhat3 = np.sum(yhat2, axis=0)
+yhat3 /= yhat2.shape[0]
+yhat3[yhat3 > 0.5] = 1
+yhat3[yhat3 != 1] = 0
 
 # Compute AUC
-auc2 = roc_auc_score(yTest, yhat2)
+auc2 = roc_auc_score(yTest, yhat3)
 print('Non-Linear SVM Accuracy:', auc2)
