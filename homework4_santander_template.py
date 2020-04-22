@@ -1,5 +1,6 @@
 from sklearn.svm import LinearSVC
 from sklearn.metrics import roc_auc_score
+from sklearn.svm import SVC
 import numpy as np
 import pandas
 
@@ -28,33 +29,53 @@ y = y[data]
 X = X[data]
 
 # Creating training and testing sets
-xtr = X[:half, :]
-xte = X[half:, :]
+xTrain = X[:half, :]
+xTest = X[half:, :]
 
-ytr = y[:half, ]
-yte = y[half:, ]
+yTrain = y[:half, ]
+yTest = y[half:, ]
 
 # Apply the SVMs to the test set
 classifier = LinearSVC(dual=False)
-classifier.fit(xtr, ytr)
+classifier.fit(xTrain, yTrain)
 
-# Predictions
-yhat1 = classifier.decision_function(xte) # Linear kernel
+# yhat1
+yhat1 = classifier.decision_function(xTest) # Linear kernel
 
 # Compute AUC
-auc1 = roc_auc_score(yte, yhat1)
+auc1 = roc_auc_score(yTest, yhat1)
 print('Linear Kernel SVM Accuracy:', auc1)
 
 
 
 # Non-linear SVM (polynomial kernel)
+# Bootstrap Aggregation (Bagging)
 
+#The amount we want in each subset
+subSetNum = 10000
 
-# Apply the SVMs to the test set
-# yhat2 = ...  # Non-linear kernel
+#Our predictions
+yhat2 = []
+
+for i in range(0, xTrain.shape[0], subSetNum):
+   #Different sets used for training and testing
+    train = xTrain[i: (i + subSetNum), : ]
+    trainLabels = yTrain[i: (i + subSetNum), ]
+
+    #Testing set, not used yet
+    test = xTest[i: (i + subSetNum), :]
+    testLabels = yTest[i: (i + subSetNum), ]
+
+    # Apply the SVMs to the test set
+    classifier = SVC(kernel = 'poly', degree = 3, gamma = 'auto') # Non-linear kernel
+    classifier.fit(train, trainLabels)
+    yhat2.append(classifier.decision_function(xTest))
+
+# yhat1 Calculations
+yhat2 = np.asarray(yhat2)
+yhat2 = np.sum(yhat2, axis = 0)
+yhat2 /= 10
 
 # Compute AUC
-# auc2 = ...
-
-
-
+auc2 = roc_auc_score(yTest, yhat2)
+print('Non-Linear SVM Accuracy:', auc2)
