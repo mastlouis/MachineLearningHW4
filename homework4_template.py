@@ -24,13 +24,13 @@ class SVM4342 ():
         sol = solvers.qp(matrix(P, tc='d'), matrix(q, tc='d'), matrix(G, tc='d'), matrix(h, tc='d'))
 
         # Fetch the learned hyperplane and bias parameters out of sol['x']
-        self.w = np.array(sol['x'].H[:-1])
+        self.w = np.atleast_2d(np.array(sol['x'].H[:-1])).T
         self.b = sol['x'].H[-1]
 
     # Given a 2-D matrix of examples X, output a vector of predicted class labels
     def predict (self, x):
         yhat = np.zeros(x.shape[0])
-        bools = (x.dot(self.w) >= 0 - self.b)[:,0]
+        bools = x.dot(self.w[0, :]) >= 0 - self.b
         yhat[bools] = 1
         yhat[yhat == 0] = -1
         return yhat
